@@ -1,5 +1,6 @@
 package com.devswa.service;
 
+import java.io.File;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -16,6 +17,9 @@ import org.springframework.stereotype.Service;
 import com.devswa.entity.CitizenPlan;
 import com.devswa.repo.CitizenPlanRepository;
 import com.devswa.request.SearchRequest;
+import com.devswa.util.EmailUtils;
+import com.devswa.util.ExcelGenerator;
+import com.devswa.util.PdfGenerator;
 import com.lowagie.text.Document;
 import com.lowagie.text.PageSize;
 import com.lowagie.text.Paragraph;
@@ -30,6 +34,15 @@ public class ReportServiceImpl implements ReportService {
 
 	@Autowired
 	private CitizenPlanRepository repo;
+	
+	@Autowired
+	private ExcelGenerator excelGenerator;
+	
+	@Autowired
+	private PdfGenerator pdfGenerator;
+	
+	@Autowired
+	private EmailUtils email;
 
 	@Override
 	public List<String> getPlanNames() {
@@ -81,56 +94,18 @@ public class ReportServiceImpl implements ReportService {
 
 	@Override
 	public boolean exportExcel(HttpServletResponse response) throws Exception {
+		
+		File f = new File("plans.xls");
 
-		Workbook workbook = new HSSFWorkbook();
-		Sheet sheet = workbook.createSheet("plans-data");
-		Row headerRow = sheet.createRow(0);
-
-		headerRow.createCell(0).setCellValue("Sl No.");
-		headerRow.createCell(1).setCellValue("Holder Name");
-		headerRow.createCell(2).setCellValue("Gender");
-		headerRow.createCell(3).setCellValue("Plan Name");
-		headerRow.createCell(4).setCellValue("Plan Status");
-		headerRow.createCell(5).setCellValue("Start Date");
-		headerRow.createCell(6).setCellValue("End Date");
-		headerRow.createCell(7).setCellValue("Benefit Amount");
-
-		int dataRow = 1;
-
-		List<CitizenPlan> plans = repo.findAll();
-
-		for (CitizenPlan plan : plans) {
-			Row data = sheet.createRow(dataRow);
-			data.createCell(0).setCellValue(plan.getCitizenId());
-			data.createCell(1).setCellValue(plan.getCitizenName());
-			data.createCell(2).setCellValue(plan.getGender());
-			data.createCell(3).setCellValue(plan.getPlanName());
-			data.createCell(4).setCellValue(plan.getPlanStatus());
-
-			if (null != plan.getStartDate()) {
-				data.createCell(5).setCellValue(plan.getStartDate() + "");
-			} else {
-				data.createCell(5).setCellValue("N/A");
-			}
-			if (null != plan.getEndDate()) {
-				data.createCell(6).setCellValue(plan.getEndDate() + "");
-			} else {
-				data.createCell(6).setCellValue("N/A");
-			}
-			if (null != plan.getBenifitAmt()) {
-				data.createCell(7).setCellValue(plan.getBenifitAmt());
-			} else {
-				data.createCell(7).setCellValue("N/A");
-			}
-
-			dataRow++;
-
-		}
-
-		ServletOutputStream os = response.getOutputStream();
-
-		workbook.write(os);
-		workbook.close();
+		excelGenerator.generate(response, repo.findAll(),f);
+		
+		String subject = "Citizen Plans Info";
+		String body = "<h2>Excel Report of Citizens</h2>";
+		String to = "swarupranjan2424@gmail.com";
+		
+		email.sendEmail(subject, body, to, f);
+		
+		f.delete();
 
 		return true;
 	}
@@ -138,61 +113,17 @@ public class ReportServiceImpl implements ReportService {
 	@Override
 	public boolean exportPdf(HttpServletResponse response) throws Exception {
 
-		Document document = new Document(PageSize.A4);
-
-		PdfWriter.getInstance(document, response.getOutputStream());
-
-		document.open();
-
-		Paragraph p = new Paragraph("Citizen Plans Info");
-		p.setAlignment(Paragraph.ALIGN_CENTER);
-		document.add(p);
-
-		PdfPTable table = new PdfPTable(8);
-		table.setWidthPercentage(100f);
-		table.setWidths(new float[] { 1.5f, 3.5f, 3.0f, 3.0f, 1.5f, 3.5f, 3.0f, 3.0f });
-		table.setSpacingBefore(10);
-
-		table.addCell("Sl No.");
-		table.addCell("Holder Name");
-		table.addCell("Gender");
-		table.addCell("Plan Name");
-		table.addCell("Plan Status");
-		table.addCell("Start Date");
-		table.addCell("End Date");
-		table.addCell("Benefit Amount");
-
-		List<CitizenPlan> plans = repo.findAll();
-
-		for (CitizenPlan plan : plans) {
-			table.addCell(plan.getCitizenId() + "");
-			table.addCell(plan.getCitizenName());
-			table.addCell(plan.getGender());
-			table.addCell(plan.getPlanName());
-			table.addCell(plan.getPlanStatus());
-
-			if (null != plan.getStartDate()) {
-				table.addCell(plan.getStartDate() + "");
-			} else {
-				table.addCell("N/A");
-			}
-
-			if (null != plan.getEndDate()) {
-				table.addCell(plan.getEndDate() + "");
-			} else {
-				table.addCell("N/A");
-			}
-
-			if (null != plan.getBenifitAmt()) {
-				table.addCell(plan.getBenifitAmt() + "");
-			} else {
-				table.addCell("N/A");
-			}
-
-		}
+		File f = new File("plans.pdf");
 		
-		document.add(table);
-		document.close();
+		pdfGenerator.generate(response, repo.findAll(), f);
+		
+		String subject = "Citizen Plans Info";
+		String body = "<h2>PDF Report of Citizens</h2>";
+		String to = "swarupranjan2424@gmail.com";
+		
+		email.sendEmail(subject, body, to, f);
+		
+		f.delete();
 
 		return true;
 	}

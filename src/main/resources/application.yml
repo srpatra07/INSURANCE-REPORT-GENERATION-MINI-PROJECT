@@ -1,3 +1,5 @@
+#Database Properties
+
 spring:
   application:
     name: INSURANCE-REPORT-GENERATION
@@ -19,3 +21,19 @@ spring:
     view:
       prefix: /pages/
       suffix: .jsp
+      
+#SMTP(mail) Properties
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: bbdp.dalai02@gmail.com
+    password: fgnz udpd noba ayxy
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+ 
+ 
