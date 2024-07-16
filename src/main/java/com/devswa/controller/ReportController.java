@@ -13,6 +13,8 @@ import com.devswa.entity.CitizenPlan;
 import com.devswa.request.SearchRequest;
 import com.devswa.service.ReportService;
 
+import jakarta.servlet.http.HttpServletResponse;
+
 
 @Controller
 public class ReportController {
@@ -46,6 +48,24 @@ public class ReportController {
 		model.addAttribute("planStatuses",service.getPlanStatuses());
 		model.addAttribute("plans",plans);
 		return "index";
+	}
+	
+	@GetMapping("/excel")
+	public void exportExcel(HttpServletResponse response) throws Exception
+	{
+		response.setContentType("application/octet-stream");
+		response.addHeader("Content-Disposition", "attachment;filename=plans.xls");
+		
+		service.exportExcel(response);
+	}
+	
+	@GetMapping("/pdf")
+	public void exportPdf(HttpServletResponse response) throws Exception
+	{
+		response.setContentType("application/pdf");
+		response.addHeader("Content-Disposition", "attachment;filename=plans.pdf");
+		
+		service.exportPdf(response);
 	}
 	
 }

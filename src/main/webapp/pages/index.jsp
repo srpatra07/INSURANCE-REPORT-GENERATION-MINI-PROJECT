@@ -96,7 +96,7 @@
 		<hr>
 
 		<h6>
-			Export : <a href="">Excel</a> <a href="">Pdf</a>
+			Export : <a href="excel">Excel</a> <a href="pdf">Pdf</a>
 		</h6>
 
 	</div>
